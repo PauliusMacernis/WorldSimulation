@@ -9,11 +9,12 @@ const MAX_Y = 3;// 22;
 const MIN_X = 1;
 const MAX_X = 10; //15;
 
-// Directions:
+// Directions: Must start with 1 and be +1 with the next one. DIRECTION_OVERFLOW is the last and unsupported direction.
 const UP = 1;
 const RIGHT = 2;
 const DOWN = 3;
 const LEFT = 4;
+const DIRECTION_OVERFLOW = 5;
 
 
 //echo "test";
@@ -172,11 +173,12 @@ function findNextPointToOccupy(array $environment, int $xOfPlayer, int $yOfPlaye
 {
 // Spread to North by one solid (100%) step. North+1
 
-    list($xNewTerritory, $yNewTerritory) = findNextPointToOccupyAtLevel1($environment, $desiredDirection, $xOfPlayer, $yOfPlayer);
+    list($xNewTerritory, $yNewTerritory, $newDirection) = findNextPointToOccupyAtLevel1($environment, $desiredDirection, $xOfPlayer, $yOfPlayer);
 
     list($playerOfThePoint, $playerPowerInThePoint) = getPlayerAndPowerAlreadyInThePoint($environment, $xNewTerritory, $yNewTerritory);
     if($playerOfThePoint !== PLAYER_NULL_TITLE && $playerPowerInThePoint === PLAYER_NULL_POWER) {
-        throw new RuntimeException(printf('Getting into initial spot of player "%s" is not allowed. Taking the spot player got initially is not allowed. ', $playerOfThePoint));
+        list($xNewTerritory, $yNewTerritory, $newDirection) = findNextPointToOccupy($environment, $xOfPlayer, $yOfPlayer, ++$newDirection);
+        //throw new RuntimeException(printf('Getting into initial spot of player "%s" is not allowed. Taking the spot player got initially is not allowed. ', $playerOfThePoint));
     }
     // @TODO: Hitting the initial point of other player.
     if($playerOfThePoint !== PLAYER_NULL_TITLE) {
@@ -210,65 +212,35 @@ function findNextPointToOccupy(array $environment, int $xOfPlayer, int $yOfPlaye
  */
 function findNextPointToOccupyAtLevel1(array $environment, int $desiredDirection, int $xOfPlayer, int $yOfPlayer)
 {
+    $xNewTerritory = $xOfPlayer;
+    $yNewTerritory = $yOfPlayer;
+
     switch ($desiredDirection) {
         case UP:
-
-
-            $xNewTerritory = $xOfPlayer;
-            $yNewTerritory = $yOfPlayer - 1;
-            // .. deal with Overflow on X
-//            if ($xNewTerritory < MIN_X || $xNewTerritory > MAX_X) {
-//                throw new OverflowException("OVERFLOW - X");
-//            }
-            if ($yNewTerritory < MIN_Y || $yNewTerritory > MAX_Y) {
-                //throw new OverflowException("OVERFLOW - Y");
-                list($xNewTerritory, $yNewTerritory) = findNextPointToOccupy($environment, $xOfPlayer, $yOfPlayer, RIGHT);
-            }
-
-
+            --$yNewTerritory;
             break;
         case RIGHT:
-            $xNewTerritory = $xOfPlayer + 1;
-            $yNewTerritory = $yOfPlayer;
-            // .. deal with Overflow on X
-            if ($xNewTerritory < MIN_X || $xNewTerritory > MAX_X) {
-                list($xNewTerritory, $yNewTerritory) = findNextPointToOccupy($environment, $xOfPlayer, $yOfPlayer, DOWN);
-                //throw new OverflowException("OVERFLOW - X");
-            }
-//            if ($yNewTerritory < MIN_Y || $yNewTerritory > MAX_Y) {
-//                //throw new OverflowException("OVERFLOW - Y");
-//                list($xNewTerritory, $yNewTerritory) = findNextPointToOccupy($xOfPlayer, $yOfPlayer, RIGHT);
-//            }
-
+            ++$xNewTerritory;
             break;
         case DOWN:
-            $xNewTerritory = $xOfPlayer;
-            $yNewTerritory = $yOfPlayer + 1;
-            // .. deal with Overflow on X
-//            if ($xNewTerritory < MIN_X || $xNewTerritory > MAX_X) {
-//                list($xNewTerritory, $yNewTerritory) = findNextPointToOccupy($xOfPlayer, $yOfPlayer, LEFT);
-//                //throw new OverflowException("OVERFLOW - X");
-//            }
-            if ($yNewTerritory < MIN_Y || $yNewTerritory > MAX_Y) {
-                //throw new OverflowException("OVERFLOW - Y");
-                list($xNewTerritory, $yNewTerritory) = findNextPointToOccupy($environment, $xOfPlayer, $yOfPlayer, LEFT);
-            }
+            ++$yNewTerritory;
             break;
         case LEFT:
-            $xNewTerritory = $xOfPlayer - 1;
-            $yNewTerritory = $yOfPlayer;
-            // .. deal with Overflow on X
-            if ($xNewTerritory < MIN_X || $xNewTerritory > MAX_X) {
-                //list($xNewTerritory, $yNewTerritory) = findNextPointToOccupy($xOfPlayer, $yOfPlayer, DOWN);
-                throw new OverflowException("OVERFLOW - NOWHERE TO GO");
-            }
-//            if ($yNewTerritory < MIN_Y || $yNewTerritory > MAX_Y) {
-//                //throw new OverflowException("OVERFLOW - Y");
-//                list($xNewTerritory, $yNewTerritory) = findNextPointToOccupy($xOfPlayer, $yOfPlayer, RIGHT);
-//            }
+            --$xNewTerritory;
+            break;
+        case DIRECTION_OVERFLOW:
+            throw new OverflowException("--- DIRECTION OVERFLOW ---");
             break;
     }
-    return array($xNewTerritory, $yNewTerritory);
+
+    if ($xNewTerritory < MIN_X || $xNewTerritory > MAX_X) {
+        list($xNewTerritory, $yNewTerritory) = findNextPointToOccupy($environment, $xOfPlayer, $yOfPlayer, $desiredDirection+1);
+    }
+    if ($yNewTerritory < MIN_Y || $yNewTerritory > MAX_Y) {
+        list($xNewTerritory, $yNewTerritory) = findNextPointToOccupy($environment, $xOfPlayer, $yOfPlayer, $desiredDirection+1);
+    }
+
+    return array($xNewTerritory, $yNewTerritory, $desiredDirection);
 }
 
 // ----------------
@@ -283,14 +255,14 @@ echo "\n-------- RESULT -------------\n";
 
 
 // Set A
-$xA = getRandX();
-$yA = getRandY();
+$xA = 2; //getRandX();
+$yA = 2; //getRandY();
 $matrix[$yA][$xA] = "A";
 var_dump(sprintf('A [%s, %s]', $xA, $yA) );
 
 // Set B
-$xB = getRandX();
-$yB = getRandY();
+$xB = 2; //getRandX();
+$yB = 3; //getRandY();
 $matrix[$yB][$xB] = "B";
 var_dump(sprintf('B [%s, %s]', $xB, $yB) );
 
@@ -305,3 +277,8 @@ $matrix = getEmpoweredMatrixValue($matrix, 'B');
 outputMatrix($matrix);
 
 echo "\n";
+
+/**
+ * @todo Tests:
+ * Field: 10,3 A: 2,2 B: 2,3
+ */
