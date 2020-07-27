@@ -84,7 +84,7 @@ function findPlayerInEnvironment(array $environment, string $playerName) {
 }
 
 function getEmpoweredMatrixValue(array $environment, string $playerName, int $desiredDirection) {
-    list($xOfPlayer, $yOfPlayer) = findPlayerInEnvironment($environment, $playerName);
+    [$xOfPlayer, $yOfPlayer] = findPlayerInEnvironment($environment, $playerName);
 
     // On the level #1 - player must collect:
     //  - 4 x1 points (north/east/south/west, if not possible all - at least anywhere in the solid way)
@@ -92,7 +92,7 @@ function getEmpoweredMatrixValue(array $environment, string $playerName, int $de
     //  -- this will make "a solid circle"
     $newTerritorySolidity = 100; // percents
 
-    list($xNewTerritory, $yNewTerritory) = findNextPointToOccupy($environment, $xOfPlayer, $yOfPlayer, $desiredDirection);
+    [$xNewTerritory, $yNewTerritory] = findNextPointToOccupy($environment, $xOfPlayer, $yOfPlayer, $desiredDirection);
 
     $environment[$yNewTerritory][$xNewTerritory] = packPlayerAndPowerInfo($playerName, $newTerritorySolidity);
 
@@ -141,7 +141,7 @@ function getPlayerAndPowerAlreadyInThePoint(array $environment, int $xNewTerrito
         return [PLAYER_NULL_TITLE, null];
     }
 
-    list($player, $power) = unpackPlayerAndPowerInfo($environment[$yNewTerritory][$xNewTerritory]);
+    [$player, $power] = unpackPlayerAndPowerInfo($environment[$yNewTerritory][$xNewTerritory]);
 
     var_dump("_______START2:" . __METHOD__ . "___________");
     var_dump($environment[$yNewTerritory][$xNewTerritory]);
@@ -161,21 +161,21 @@ function getPlayerAndPowerAlreadyInThePoint(array $environment, int $xNewTerrito
 
 function isThisSpotEmpty(array $environment, int $xNewTerritory, int $yNewTerritory)
 {
-    list($playerOfThePoint, $playerPowerInThePoint) = getPlayerAndPowerAlreadyInThePoint($environment, $xNewTerritory, $yNewTerritory);
+    [$playerOfThePoint, $playerPowerInThePoint] = getPlayerAndPowerAlreadyInThePoint($environment, $xNewTerritory, $yNewTerritory);
 
     return $playerOfThePoint === PLAYER_NULL_TITLE && $playerPowerInThePoint === PLAYER_NULL_POWER;
 }
 
 function isThisSpotOfOtherPlayerAndInitial(array $environment, int $xNewTerritory, int $yNewTerritory)
 {
-    list($playerOfThePoint, $playerPowerInThePoint) = getPlayerAndPowerAlreadyInThePoint($environment, $xNewTerritory, $yNewTerritory);
+    [$playerOfThePoint, $playerPowerInThePoint] = getPlayerAndPowerAlreadyInThePoint($environment, $xNewTerritory, $yNewTerritory);
 
     return $playerOfThePoint !== PLAYER_NULL_TITLE && $playerPowerInThePoint === PLAYER_NULL_POWER;
 }
 
 function isThisSpotOfOtherPlayerAndNotInitial(array $environment, int $xNewTerritory, int $yNewTerritory)
 {
-    list($playerOfThePoint, $playerPowerInThePoint) = getPlayerAndPowerAlreadyInThePoint($environment, $xNewTerritory, $yNewTerritory);
+    [$playerOfThePoint, $playerPowerInThePoint] = getPlayerAndPowerAlreadyInThePoint($environment, $xNewTerritory, $yNewTerritory);
 
     return $playerOfThePoint !== PLAYER_NULL_TITLE && $playerPowerInThePoint !== PLAYER_NULL_POWER;
 }
@@ -188,7 +188,7 @@ function isThisSpotOfOtherPlayerAndNotInitial(array $environment, int $xNewTerri
  */
 function findNextPointToOccupy(array $environment, int $xOfPlayer, int $yOfPlayer, int $desiredDirection)
 {
-    list($xNewTerritory, $yNewTerritory, $newDirection) = findNextPointToOccupyAtLevel1($environment, $desiredDirection, $xOfPlayer, $yOfPlayer);
+    [$xNewTerritory, $yNewTerritory, $newDirection] = findNextPointToOccupyAtLevel1($environment, $desiredDirection, $xOfPlayer, $yOfPlayer);
 
     if(isThisSpotOfOtherPlayerAndInitial($environment, $xNewTerritory, $yNewTerritory)) {
 
@@ -196,7 +196,7 @@ function findNextPointToOccupy(array $environment, int $xOfPlayer, int $yOfPlaye
         var_dump($xNewTerritory);
         var_dump($yNewTerritory);
 
-        list($xNewTerritory, $yNewTerritory, $newDirection) = findNextPointToOccupyAtLevel1($environment, $desiredDirection+1, $xOfPlayer, $yOfPlayer);
+        [$xNewTerritory, $yNewTerritory, $newDirection] = findNextPointToOccupyAtLevel1($environment, $desiredDirection + 1, $xOfPlayer, $yOfPlayer);
         return array($xNewTerritory, $yNewTerritory);
     }
 
@@ -206,7 +206,7 @@ function findNextPointToOccupy(array $environment, int $xOfPlayer, int $yOfPlaye
         var_dump($xNewTerritory);
         var_dump($yNewTerritory);
 
-        list($xNewTerritory, $yNewTerritory, $newDirection) = findNextPointToOccupyAtLevel1($environment, $desiredDirection+1, $xOfPlayer, $yOfPlayer);
+        [$xNewTerritory, $yNewTerritory, $newDirection] = findNextPointToOccupyAtLevel1($environment, $desiredDirection + 1, $xOfPlayer, $yOfPlayer);
         return array($xNewTerritory, $yNewTerritory);
     }
 
@@ -257,10 +257,10 @@ function findNextPointToOccupyAtLevel1(array $environment, int $desiredDirection
     }
 
     if ($xNewTerritory < MIN_X || $xNewTerritory > MAX_X) {
-        list($xNewTerritory, $yNewTerritory) = findNextPointToOccupy($environment, $xOfPlayer, $yOfPlayer, $desiredDirection+1);
+        [$xNewTerritory, $yNewTerritory] = findNextPointToOccupy($environment, $xOfPlayer, $yOfPlayer, $desiredDirection + 1);
     }
     if ($yNewTerritory < MIN_Y || $yNewTerritory > MAX_Y) {
-        list($xNewTerritory, $yNewTerritory) = findNextPointToOccupy($environment, $xOfPlayer, $yOfPlayer, $desiredDirection+1);
+        [$xNewTerritory, $yNewTerritory] = findNextPointToOccupy($environment, $xOfPlayer, $yOfPlayer, $desiredDirection + 1);
     }
 
     return array($xNewTerritory, $yNewTerritory, $desiredDirection);
@@ -287,17 +287,17 @@ var_dump(sprintf('A [%s, %s]', $xA, $yA) );
 $xB = 2; //getRandX();
 $yB = 3; //getRandY();
 $matrix[$yB][$xB] = "B";
-var_dump(sprintf('B [%s, %s]', $xB, $yB) );
+var_dump(sprintf('B [%s, %s]', $xB, $yB));
 
-if($xA === $xB && $yA === $yB) {
+if ($xA === $xB && $yA === $yB) {
     throw new RuntimeException('There cannot be two points in the same spot!');
 }
 
 $matrix = getEmpoweredMatrixValue($matrix, 'A', UP);
 $matrix = getEmpoweredMatrixValue($matrix, 'B', UP);
 
-$matrix = getEmpoweredMatrixValue($matrix, 'A', UP);
-$matrix = getEmpoweredMatrixValue($matrix, 'B', UP);
+$matrix = getEmpoweredMatrixValue($matrix, 'A', UP + 1);
+$matrix = getEmpoweredMatrixValue($matrix, 'B', UP + 1);
 
 
 outputMatrix($matrix);
