@@ -50,6 +50,7 @@ function prepareMatrix(array $values)
  */
 function outputMatrix(array $values)
 {
+    echo "\n---------------------------------------------------------------------";
     foreach ($values as $xKey => $row) {
         //echo "\n" . str_pad($xValue,10,".", STR_PAD_LEFT);
         echo "\n";
@@ -57,6 +58,7 @@ function outputMatrix(array $values)
             echo str_pad($value, 6, " ", STR_PAD_LEFT);
         }
     }
+    echo "\n---------------------------------------------------------------------\n";
 }
 
 
@@ -120,7 +122,7 @@ function unpackPlayerAndPowerInfo($environment)
         throw new RuntimeException(sprintf('Array consists of too many fragments: %s', count($playerAndPower)));
     }
 
-    var_dump($playerAndPower);
+//    var_dump($playerAndPower);
 
     $player = $playerAndPower[0] ?? PLAYER_NULL_TITLE;
     $power = $playerAndPower[1] ?? PLAYER_NULL_POWER; // initial point
@@ -130,23 +132,23 @@ function unpackPlayerAndPowerInfo($environment)
 
 function getPlayerAndPowerAlreadyInThePoint(array $environment, int $xNewTerritory, int $yNewTerritory): array
 {
-    var_dump("_______START:" . __METHOD__ . "___________");
-    outputMatrix($environment);
-    var_dump($xNewTerritory);
-    var_dump($yNewTerritory);
-    var_dump("_______END:" . __METHOD__ . "___________");
+//    var_dump("_______START:" . __METHOD__ . "___________");
+//    outputMatrix($environment);
+//    var_dump($xNewTerritory);
+//    var_dump($yNewTerritory);
+//    var_dump("_______END:" . __METHOD__ . "___________");
 
 
-    if(PLAYER_NULL_TITLE === $environment[$yNewTerritory][$xNewTerritory]) {
+    if (PLAYER_NULL_TITLE === $environment[$yNewTerritory][$xNewTerritory]) {
         return [PLAYER_NULL_TITLE, null];
     }
 
     [$player, $power] = unpackPlayerAndPowerInfo($environment[$yNewTerritory][$xNewTerritory]);
 
-    var_dump("_______START2:" . __METHOD__ . "___________");
-    var_dump($environment[$yNewTerritory][$xNewTerritory]);
-    var_dump(sprintf('Player: "%s", Power: "%s"', $player, $power));
-    var_dump("_______END2:" . __METHOD__ . "___________");
+//    var_dump("_______START2:" . __METHOD__ . "___________");
+//    var_dump($environment[$yNewTerritory][$xNewTerritory]);
+//    var_dump(sprintf('Player: "%s", Power: "%s"', $player, $power));
+//    var_dump("_______END2:" . __METHOD__ . "___________");
 
 
 //
@@ -271,17 +273,19 @@ function findNextPointToOccupyAtLevel1(array $environment, int $desiredDirection
 
 
 $matrix = prepareMatrix($values);
-echo "\n-------- INIT -------------\n";
+echo "\n-------- WORLD:INITIALIZATION -------------\n";
 outputMatrix($matrix);
 
-echo "\n-------- RESULT -------------\n";
-
+echo "\n-------- PLAYER:A -------------\n";
 
 // Set A
 $xA = 2; //getRandX();
 $yA = 2; //getRandY();
 $matrix[$yA][$xA] = "A";
-var_dump(sprintf('A [%s, %s]', $xA, $yA) );
+var_dump(sprintf('A [%s, %s]', $xA, $yA));
+
+
+echo "\n-------- PLAYER:B -------------\n";
 
 // Set B
 $xB = 2; //getRandX();
@@ -293,12 +297,22 @@ if ($xA === $xB && $yA === $yB) {
     throw new RuntimeException('There cannot be two points in the same spot!');
 }
 
-$matrix = getEmpoweredMatrixValue($matrix, 'A', UP);
-$matrix = getEmpoweredMatrixValue($matrix, 'B', UP);
+echo "\n-------- THE GAME -------------\n";
 
-$matrix = getEmpoweredMatrixValue($matrix, 'A', UP + 1);
-$matrix = getEmpoweredMatrixValue($matrix, 'B', UP + 1);
-
+try {
+    for ($direction = UP; $direction < DIRECTION_OVERFLOW; $direction++) {
+        echo sprintf("\n-------- THE GAME:ROUND:STARTS:%s -------------\n", $direction);
+        outputMatrix($matrix);
+        $matrix = getEmpoweredMatrixValue($matrix, 'A', $direction);
+        outputMatrix($matrix);
+        $matrix = getEmpoweredMatrixValue($matrix, 'B', $direction);
+        echo sprintf("\n-------- THE GAME:ROUND:ENDS:%s -------------\n", $direction);
+        outputMatrix($matrix);
+        echo sprintf("\n-------- THE GAME:ROUND:ENDED:%s -------------\n", $direction);
+    }
+} catch (OverflowException $exception) {
+    throw $exception;
+}
 
 outputMatrix($matrix);
 
