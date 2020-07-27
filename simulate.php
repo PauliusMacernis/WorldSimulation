@@ -83,11 +83,8 @@ function findPlayerInEnvironment(array $environment, string $playerName) {
     throw new RuntimeException(sprintf('There must be the player with the name "%s"', $playerName));
 }
 
-function getEmpoweredMatrixValue(array $environment, string $playerName) {
+function getEmpoweredMatrixValue(array $environment, string $playerName, int $desiredDirection) {
     list($xOfPlayer, $yOfPlayer) = findPlayerInEnvironment($environment, $playerName);
-
-//    var_dump($xOfPlayer);
-//    var_dump($yOfPlayer);
 
     // On the level #1 - player must collect:
     //  - 4 x1 points (north/east/south/west, if not possible all - at least anywhere in the solid way)
@@ -95,8 +92,7 @@ function getEmpoweredMatrixValue(array $environment, string $playerName) {
     //  -- this will make "a solid circle"
     $newTerritorySolidity = 100; // percents
 
-    list($xNewTerritory, $yNewTerritory) = findNextPointToOccupy($environment, $xOfPlayer, $yOfPlayer, UP);
-
+    list($xNewTerritory, $yNewTerritory) = findNextPointToOccupy($environment, $xOfPlayer, $yOfPlayer, $desiredDirection);
 
     $environment[$yNewTerritory][$xNewTerritory] = packPlayerAndPowerInfo($playerName, $newTerritorySolidity);
 
@@ -163,6 +159,27 @@ function getPlayerAndPowerAlreadyInThePoint(array $environment, int $xNewTerrito
 }
 
 
+function isThisSpotEmpty(array $environment, int $xNewTerritory, int $yNewTerritory)
+{
+    list($playerOfThePoint, $playerPowerInThePoint) = getPlayerAndPowerAlreadyInThePoint($environment, $xNewTerritory, $yNewTerritory);
+
+    return $playerOfThePoint === PLAYER_NULL_TITLE && $playerPowerInThePoint === PLAYER_NULL_POWER;
+}
+
+function isThisSpotOfOtherPlayerAndInitial(array $environment, int $xNewTerritory, int $yNewTerritory)
+{
+    list($playerOfThePoint, $playerPowerInThePoint) = getPlayerAndPowerAlreadyInThePoint($environment, $xNewTerritory, $yNewTerritory);
+
+    return $playerOfThePoint !== PLAYER_NULL_TITLE && $playerPowerInThePoint === PLAYER_NULL_POWER;
+}
+
+function isThisSpotOfOtherPlayerAndNotInitial(array $environment, int $xNewTerritory, int $yNewTerritory)
+{
+    list($playerOfThePoint, $playerPowerInThePoint) = getPlayerAndPowerAlreadyInThePoint($environment, $xNewTerritory, $yNewTerritory);
+
+    return $playerOfThePoint !== PLAYER_NULL_TITLE && $playerPowerInThePoint !== PLAYER_NULL_POWER;
+}
+
 
 /**
  * @param $xOfPlayer
@@ -171,36 +188,42 @@ function getPlayerAndPowerAlreadyInThePoint(array $environment, int $xNewTerrito
  */
 function findNextPointToOccupy(array $environment, int $xOfPlayer, int $yOfPlayer, int $desiredDirection)
 {
-// Spread to North by one solid (100%) step. North+1
-
     list($xNewTerritory, $yNewTerritory, $newDirection) = findNextPointToOccupyAtLevel1($environment, $desiredDirection, $xOfPlayer, $yOfPlayer);
 
-    list($playerOfThePoint, $playerPowerInThePoint) = getPlayerAndPowerAlreadyInThePoint($environment, $xNewTerritory, $yNewTerritory);
-    if($playerOfThePoint !== PLAYER_NULL_TITLE && $playerPowerInThePoint === PLAYER_NULL_POWER) {
-        list($xNewTerritory, $yNewTerritory, $newDirection) = findNextPointToOccupy($environment, $xOfPlayer, $yOfPlayer, ++$newDirection);
-        //throw new RuntimeException(printf('Getting into initial spot of player "%s" is not allowed. Taking the spot player got initially is not allowed. ', $playerOfThePoint));
+    if(isThisSpotOfOtherPlayerAndInitial($environment, $xNewTerritory, $yNewTerritory)) {
+
+        var_dump('--------THIS IS SPOT OF PLAYER, INITIAL SPOT-----------');
+        var_dump($xNewTerritory);
+        var_dump($yNewTerritory);
+
+        list($xNewTerritory, $yNewTerritory, $newDirection) = findNextPointToOccupyAtLevel1($environment, $desiredDirection+1, $xOfPlayer, $yOfPlayer);
+        return array($xNewTerritory, $yNewTerritory);
     }
-    // @TODO: Hitting the initial point of other player.
-    if($playerOfThePoint !== PLAYER_NULL_TITLE) {
-        throw new RangeException(sprintf("The place [x:%s, y:%s] is already occupied by %s. Power level: %s", $xNewTerritory, $yNewTerritory, $playerOfThePoint, $playerPowerInThePoint));
+
+    if(isThisSpotOfOtherPlayerAndNotInitial($environment, $xNewTerritory, $yNewTerritory)) {
+
+        var_dump('--------THIS IS SPOT OF PLAYER, NOT INITIAL SPOT-----------');
+        var_dump($xNewTerritory);
+        var_dump($yNewTerritory);
+
+        list($xNewTerritory, $yNewTerritory, $newDirection) = findNextPointToOccupyAtLevel1($environment, $desiredDirection+1, $xOfPlayer, $yOfPlayer);
+        return array($xNewTerritory, $yNewTerritory);
     }
 
+    // EMPTY SPOT
+    if(isThisSpotEmpty($environment, $xNewTerritory, $yNewTerritory)) {
 
-//    $xNewTerritory = $xOfPlayer;
-//    $yNewTerritory = $yOfPlayer - 1;
-//    // .. deal with Overflow on X
-//    if ($xNewTerritory < MIN_X || $xNewTerritory > MAX_X) {
-//        throw new OverflowException("OVERFLOW - X");
-//    }
-//    if ($yNewTerritory < MIN_Y || $yNewTerritory > MAX_Y) {
-//        throw new OverflowException("OVERFLOW - Y");
-//    }
+        var_dump('--------EMPTY SPOT-----------');
+        var_dump($xNewTerritory);
+        var_dump($yNewTerritory);
 
-    // TODO: Is the place occupied by other player?
+        return array($xNewTerritory, $yNewTerritory);
+    }
 
-
-    return array($xNewTerritory, $yNewTerritory);
+    throw new RuntimeException('This error means some more logic is needed in order to cover the entire dynamics of players occupying the world.');
 }
+
+
 
 /**
  * Level1 is UP, RIGHT, DOWN, or LEFT.
@@ -270,8 +293,11 @@ if($xA === $xB && $yA === $yB) {
     throw new RuntimeException('There cannot be two points in the same spot!');
 }
 
-$matrix = getEmpoweredMatrixValue($matrix, 'A');
-$matrix = getEmpoweredMatrixValue($matrix, 'B');
+$matrix = getEmpoweredMatrixValue($matrix, 'A', UP);
+$matrix = getEmpoweredMatrixValue($matrix, 'B', UP);
+
+$matrix = getEmpoweredMatrixValue($matrix, 'A', UP);
+$matrix = getEmpoweredMatrixValue($matrix, 'B', UP);
 
 
 outputMatrix($matrix);
