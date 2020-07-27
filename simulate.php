@@ -85,18 +85,19 @@ function findPlayerInEnvironment(array $environment, string $playerName) {
     throw new RuntimeException(sprintf('There must be the player with the name "%s"', $playerName));
 }
 
-function getEmpoweredMatrixValue(array $environment, string $playerName, int $desiredDirection) {
+function getEmpoweredMatrixValue(array $environment, string $playerName, int $desiredDirection, int $power)
+{
     [$xOfPlayer, $yOfPlayer] = findPlayerInEnvironment($environment, $playerName);
 
     // On the level #1 - player must collect:
     //  - 4 x1 points (north/east/south/west, if not possible all - at least anywhere in the solid way)
     //  - 4x 0.5 points (NE, SE, SW, NW)
     //  -- this will make "a solid circle"
-    $newTerritorySolidity = 100; // percents
+    //$newTerritorySolidity = 100; // percents // aka. power
 
     [$xNewTerritory, $yNewTerritory] = findNextPointToOccupy($environment, $xOfPlayer, $yOfPlayer, $desiredDirection);
 
-    $environment[$yNewTerritory][$xNewTerritory] = packPlayerAndPowerInfo($playerName, $newTerritorySolidity);
+    $environment[$yNewTerritory][$xNewTerritory] = packPlayerAndPowerInfo($playerName, $power);
 
     return $environment;
 }
@@ -300,14 +301,20 @@ if ($xA === $xB && $yA === $yB) {
 echo "\n-------- THE GAME -------------\n";
 
 try {
+    $power = 0;
     for ($direction = UP; $direction < DIRECTION_OVERFLOW; $direction++) {
         echo sprintf("\n-------- THE GAME:ROUND:STARTS:%s -------------\n", $direction);
         outputMatrix($matrix);
-        $matrix = getEmpoweredMatrixValue($matrix, 'A', $direction);
+
+        $power++;
+        $matrix = getEmpoweredMatrixValue($matrix, 'A', $direction, $power);
         outputMatrix($matrix);
-        $matrix = getEmpoweredMatrixValue($matrix, 'B', $direction);
+
+        $power++;
+        $matrix = getEmpoweredMatrixValue($matrix, 'B', $direction, $power);
         echo sprintf("\n-------- THE GAME:ROUND:ENDS:%s -------------\n", $direction);
         outputMatrix($matrix);
+
         echo sprintf("\n-------- THE GAME:ROUND:ENDED:%s -------------\n", $direction);
     }
 } catch (OverflowException $exception) {
