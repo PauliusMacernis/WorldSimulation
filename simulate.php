@@ -272,31 +272,42 @@ function findNextPointToOccupyAtLevel1(array $environment, int $desiredDirection
 // ----------------
 
 
-
 $matrix = prepareMatrix($values);
 echo "\n-------- WORLD:INITIALIZATION -------------\n";
 outputMatrix($matrix);
 
-echo "\n-------- PLAYER:A -------------\n";
+echo "\n-------- PLAYERS:INITIALIZATION -------------\n";
+$players = ['A', 'B'];
 
-// Set A
-$xA = 2; //getRandX();
-$yA = 2; //getRandY();
-$matrix[$yA][$xA] = "A";
-var_dump(sprintf('A [%s, %s]', $xA, $yA));
+foreach ($players as $playerName) {
+    echo "\n-------- PLAYER:" . $playerName . " -------------\n";
 
+    // Set A and B to specific starting points (hardcode)
+    switch ($playerName) {
+        case 'A':
+            $x = 2; //getRandX();
+            $y = 2; //getRandY();
+            break;
+        case 'B':
+            $x = 2; //getRandX();
+            $y = 3; //getRandY();
+            break;
+        default:
+            $x = getRandX();
+            $y = getRandY();
+            break;
+    }
 
-echo "\n-------- PLAYER:B -------------\n";
+    // Duplicate?
+    if (false === isThisSpotEmpty($matrix, $x, $y)) {
+        throw new RuntimeException('There cannot be two points in the same spot!');
+    }
 
-// Set B
-$xB = 2; //getRandX();
-$yB = 3; //getRandY();
-$matrix[$yB][$xB] = "B";
-var_dump(sprintf('B [%s, %s]', $xB, $yB));
+    $matrix[$y][$x] = $playerName;
+    var_dump(sprintf('%s [%s, %s]', $playerName, $x, $y));
 
-if ($xA === $xB && $yA === $yB) {
-    throw new RuntimeException('There cannot be two points in the same spot!');
 }
+
 
 echo "\n-------- THE GAME -------------\n";
 
