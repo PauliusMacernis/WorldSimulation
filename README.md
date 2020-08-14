@@ -3,7 +3,7 @@ N amount of points compete for the land. It is the war-free world therefore comp
 
 ## Run
 
-`composer install`
+`composer install`  
 `php simulate.php`
 
 The output:  
@@ -19,5 +19,5 @@ The output:
 
 ```
 
-Quite a lot to improve...
+Quite a lot to improve...  
 At the moment it stops when one of the players blocks the road for another player to prosper. 
