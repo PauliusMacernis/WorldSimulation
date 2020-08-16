@@ -3,18 +3,21 @@ declare(strict_types=1);
 
 namespace Simulation\World;
 
-use LogicException;
 use Simulation\Exception\PixelInitialIsMissing;
 use Simulation\Exception\TheWorldIsFull;
 
 final class Locator
 {
-    // Directions to be used when locating for the
+    // Relative directions to be used when locating for the pixel from the pixel.
     private const UP = 0;
     private const RIGHT = 1;
     private const DOWN = 2;
     private const LEFT = 3;
     private const DIRECTIONS_COUNT_IN_TOTAL = 4; // UP(0), RIGHT(1), DOWN(2), LEFT(3) , - 4 directions in total
+
+    private const ROUNDS_START_FROM_NUMBER = 1; // The number value of the first round
+    private const TRY_STARTS_FROM_NUMBER = 1; // The number value of the first try
+
 
     /**
      * There are 4 ways to go from each pixel: UP, RIGHT, DOWN, LEFT. Then we have to switch to another pixel as a "base for lookup from" point.
@@ -32,11 +35,14 @@ final class Locator
             throw new TheWorldIsFull('The World is full. it is useless to go for locating another free spot.');
         }
 
-        $directionForNow = $try % self::DIRECTIONS_COUNT_IN_TOTAL;
-        $round = (int)floor($try / self::DIRECTIONS_COUNT_IN_TOTAL) + 1; // Rounds start from 1, not from 0. @TODO: Refactor to start from 0?
-        $pixelAsABaseForTryingNow = $world->getPixelByPlayer($player, $round, null);
+        $directionForNow = $this->getDirectionConvertedFromTry($try);
+        $roundForNow = $this->getRoundConvertedFromTry($try);
+
+        $pixelAsABaseForTryingNow = $world->getPixelByPlayer($player, $roundForNow, null);
+
         if (null === $pixelAsABaseForTryingNow) {
-            throw new LogicException(sprintf('Code flow error. Cannot find pixel for player ID:%s and round: %s. It must be here according to the flow.', $player->getId(), $round));
+            return null;
+            //throw new LogicException(sprintf('Code flow error. Cannot find pixel for player ID:%s and round: %s, try: %s. It must be here according to the flow.', $player->getId(), $roundForNow, $try));
         }
 
         $xNewTerritory = $pixelAsABaseForTryingNow->getX();
@@ -67,6 +73,15 @@ final class Locator
         }
 
         return $pixel;
+    }
 
+    public function getRoundConvertedFromTry(int $try): int
+    {
+        return (int)floor($try / self::DIRECTIONS_COUNT_IN_TOTAL) + self::ROUNDS_START_FROM_NUMBER;
+    }
+
+    private function getDirectionConvertedFromTry(int $try): int
+    {
+        return ($try - self::TRY_STARTS_FROM_NUMBER) % self::DIRECTIONS_COUNT_IN_TOTAL;
     }
 }

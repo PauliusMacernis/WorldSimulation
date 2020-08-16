@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Simulation\World;
 
-
 use Simulation\Player\Pixel\PixelInitial;
 
 /**
@@ -14,11 +13,17 @@ class Player
     /** @var string|null Null in case Player is not set. String otherwise. */
     private ?string $id;
     private PixelInitial $pixelInitial;
+    private int $roundsPlayed;
+    private int $roundsPlayedInFreedom;
+    private int $roundsPlayedInFreedomCompensation;
 
     public function __construct(?string $id, PixelInitial $pixelInitial)
     {
         $this->id = $id;
         $this->pixelInitial = $pixelInitial;
+        $this->roundsPlayed = 0;
+        $this->roundsPlayedInFreedom = 0;
+        $this->roundsPlayedInFreedomCompensation = 0;
     }
 
     public function getId(): ?string
@@ -31,5 +36,28 @@ class Player
         return $this->pixelInitial;
     }
 
+    public function increaseRoundsPlayed(): void
+    {
+        ++$this->roundsPlayed;
+    }
 
+    public function getRoundsPlayedInFreedom(): int
+    {
+        return $this->roundsPlayedInFreedom;
+    }
+
+    public function increaseRoundsPlayedInFreedom(): void
+    {
+        ++$this->roundsPlayedInFreedom;
+    }
+
+    public function increaseRoundsPlayedInFreedomCompensationBy(int $amount): void
+    {
+        $this->roundsPlayedInFreedomCompensation += $amount;
+    }
+
+    public function getRoundsPlayedInFreedomCompensation(): int
+    {
+        return $this->roundsPlayedInFreedomCompensation;
+    }
 }

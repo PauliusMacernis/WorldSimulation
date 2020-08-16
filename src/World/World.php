@@ -3,7 +3,8 @@ declare(strict_types=1);
 
 namespace Simulation\World;
 
-use LogicException;
+use Simulation\Exception\FreedomLimit;
+use Simulation\Exception\TheWorldIsFull;
 
 /**
  * This is The World made of Pixels Players play in.
@@ -20,7 +21,7 @@ final class World
     private const MAX_X = 7; //7 //14 // 20; // 3600000000
 
     private const MIN_Y = 0;
-    private const MAX_Y = 21; //3 // 21 // 40 // 1800000000;
+    private const MAX_Y = 11; //3 // 21 // 40 // 1800000000;
 
     private array $data = [];
 
@@ -56,13 +57,30 @@ final class World
         return mt_rand(self::MIN_Y, self::MAX_Y);
     }
 
-    public function setOnePixelTo(Player $player, Statistics $statistics, int $counterRound, int $counterTake): void
+    public function setOnePixelTo(Player $player, Statistics $statistics, int $counterRound, int $counterTake, Output $output): void
     {
-        if (false === $statistics->isPlayerInWorld($player, $this, null, null)) {
-            $this->setInitialPixelOfPlayer($player, $counterRound, $counterTake);
-            return;
+        try {
+            if (false === $statistics->isPlayerInWorld($player, $this, null, null)) {
+                $this->setInitialPixelOfPlayer($player, $counterRound, $counterTake);
+            } else {
+                $this->setOtherThanInitialPixelOfPlayer($player, $statistics, $counterRound, $counterTake);
+            }
+
+            $player->increaseRoundsPlayedInFreedom();
+
+        } catch (TheWorldIsFull $exception) {
+            $output->info(sprintf('%s [%s.%s]: THE WORLD IS FULL', $player->getId(), $counterRound, $counterTake));
+            // The World is full, we compensate to each of remaining players.
+            $freedomLimitCompensation = new FreedomLimitCompensation();
+            $player->increaseRoundsPlayedInFreedomCompensationBy($freedomLimitCompensation->getCompensation());
+        } catch (FreedomLimit $exception) {
+            $output->info(sprintf('%s [%s.%s]: FREEDOM LIMIT', $player->getId(), $counterRound, $counterTake));
+            // Player gets compensation & becomes equally happy compared to the players who got the territory
+            $freedomLimitCompensation = new FreedomLimitCompensation();
+            $player->increaseRoundsPlayedInFreedomCompensationBy($freedomLimitCompensation->getCompensation());
         }
-        $this->setOtherThanInitialPixelOfPlayer($player, $statistics, $counterRound, $counterTake);
+
+        $player->increaseRoundsPlayed();
     }
 
     private function setInitialPixelOfPlayer(Player $player, int $counterRound, int $counterTake): void
@@ -84,15 +102,14 @@ final class World
 
         while (null === $pixel) {
             ++$try;
-            $pixel = $locator->locateNextPointToTakeBasedOnInitial($player, $this, $statistics, $counterRound, $counterTake, $try);
 
+            $pixel = $locator->locateNextPointToTakeBasedOnInitial($player, $this, $statistics, $counterRound, $counterTake, $try);
             if (null !== $pixel) {
                 $this->setPixelOneExactPixelTo($pixel->getX(), $pixel->getY(), $player, $counterRound, $counterTake);
             }
 
-            // Just to be sure, the check is probably redundant.
-            if (null !== $pixel && false === $statistics->isPlayerInWorld($player, $this, $counterRound, $counterTake)) {
-                throw new LogicException('Cannot set pixel [%s,%s] to the world. Player cannot be attached. Code issue?');
+            if ($this->isItFreedomLimit($pixel, $locator, $counterTake, $try, $player)) {
+                throw new FreedomLimit(sprintf('Limited freedom of player ID:%s', $player->getId()));
             }
         }
     }
@@ -132,5 +149,12 @@ final class World
         }
 
         return true;
+    }
+
+    private function isItFreedomLimit(?Pixel $pixel, Locator $locator, int $counterTake, int $try, Player $player): bool
+    {
+        return
+            null === $pixel
+            && $player->getRoundsPlayedInFreedom() + 1 <= $locator->getRoundConvertedFromTry($try);
     }
 }

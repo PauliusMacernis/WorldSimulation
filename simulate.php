@@ -25,13 +25,14 @@ $players = new PlayersUnique(
     new Player('G', new PixelInitial(2, 6)),
     new Player('H', new PixelInitial(0, 6)),
     new Player('I', new PixelInitial(0, 4)),
-
+//
 //    new Player('A', new PixelInitialRandom($world)),
 //    new Player('B', new PixelInitialRandom($world)),
 //    new Player('C', new PixelInitialRandom($world)),
+//    new Player('D', new PixelInitialRandom($world)),
 );
 
-$output->output($world, 'Initial');
+$output->outputWorld($world, 'Initial');
 
 $counterRound = 0;
 $counterTake = 0;
@@ -39,7 +40,9 @@ while ($statistics->isFreeSpaceFoundIn($world)) {
     ++$counterRound;
     foreach ($players->getData() as $player) {
         ++$counterTake;
-        $world->setOnePixelTo($player, $statistics, $counterRound, $counterTake);
-        $output->output($world, sprintf('After the pixel is taken by the player: %s', $player->getId()));
+        $world->setOnePixelTo($player, $statistics, $counterRound, $counterTake, $output);
+        $output->outputWorld($world, sprintf('After the pixel is taken by the player: %s', $player->getId()));
     }
 }
+
+$output->outputPlayersCompensations($players, 'Player : Compensation');

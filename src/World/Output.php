@@ -10,7 +10,7 @@ class Output
 {
     private const FREE_TERRITORY_TITLE = '.';
 
-    public function output(World $world, string $header): void
+    public function outputWorld(World $world, string $header): void
     {
         echo "\n--------------------------------------------------------------------------------";
         echo "\n" . $header;
@@ -23,7 +23,7 @@ class Output
                 if (null === $pixel->getPlayer()) {
                     $label = self::FREE_TERRITORY_TITLE;
                 } else {
-                    $label = sprintf('%s: %s.%s',
+                    $label = sprintf('%s:%s.%s',
                         $pixel->getPlayer()->getId(),
                         $pixel->getCountRound(),
                         $pixel->getCountTake(),
@@ -38,9 +38,28 @@ class Output
 //                        $pixel->getPlayer()->getId(),
 //                    );
                 }
-                echo str_pad($label, 10, " ", STR_PAD_LEFT);
+                echo str_pad($label, 10, " ", STR_PAD_RIGHT);
             }
         }
         echo "\n--------------------------------------------------------------------------------\n";
+    }
+
+    public function outputPlayersCompensations(PlayersUnique $players, string $header): void
+    {
+        echo "\n--------------------------------------------------------------------------------";
+        echo "\n" . $header;
+        echo "\n--------------------------------------------------------------------------------";
+        foreach ($players->getData() as $player) {
+            echo "\n";
+            echo str_pad(sprintf('%-2s: %-4s', $player->getId(), $player->getRoundsPlayedInFreedomCompensation()), 10, " ", STR_PAD_LEFT);
+        }
+        echo "\n--------------------------------------------------------------------------------\n";
+    }
+
+    public function info(string $text): void
+    {
+        echo "\n";
+        echo "\n--------------------------------------------------------------------------------";
+        echo "\n" . $text;
     }
 }
