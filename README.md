@@ -6,9 +6,9 @@ N amount of points compete for the land. It is the war-free world therefore comp
 `composer install`  
 `php simulate.php`
 
-The output:  
+The output that works initially:  
 
-```output
+```output-initial
 
 --------------------------------------------------------------------------------
    A: 6.16   A: 8.22   A: 4.10   A: 7.19   B: 8.23         .         .         .
@@ -19,5 +19,42 @@ The output:
 
 ```
 
-Quite a lot to improve...  
-At the moment it stops when one of the players blocks the road for another player to prosper. 
+The issue of players attaching to the birthplace.  
+Player A is blocked, no player can make a move by interacting with the birthplace of other player first.  
+
+```output-birthplace-issue
+
+--------------------------------------------------------------------------------
+         .         .         .         .         .         .         .         .
+         .         .         .         .         .         .         .         .
+         .         .         .         .         .         .         .         .
+         .         .         .         .         .         .         .         .
+    I: 1.9    B: 1.2    F: 1.6         .         .         .         .         .
+    E: 1.5    A: 1.1    C: 1.3         .         .         .         .         .
+    H: 1.8    D: 1.4    G: 1.7         .         .         .         .         .
+         .         .         .         .         .         .         .         .
+         .         .         .         .         .         .         .         .
+         .         .         .         .         .         .         .         .
+         .         .         .         .         .         .         .         .
+         .         .         .         .         .         .         .         .
+         .         .         .         .         .         .         .         .
+         .         .         .         .         .         .         .         .
+         .         .         .         .         .         .         .         .
+         .         .         .         .         .         .         .         .
+         .         .         .         .         .         .         .         .
+         .         .         .         .         .         .         .         .
+         .         .         .         .         .         .         .         .
+         .         .         .         .         .         .         .         .
+         .         .         .         .         .         .         .         .
+         .         .         .         .         .         .         .         .
+--------------------------------------------------------------------------------
+
+
+
+```
+
+
+Also, the performance is slow.  
+The goal is to make The World of 3.600.000.000 (x) x 1.800.000.000 (y) in size (6.480.000.000.000.000.000 pixels in total) with 10.000.000.000 players playing one game in at least 24 hours on my laptop.  
+
+Quite a lot to improve...

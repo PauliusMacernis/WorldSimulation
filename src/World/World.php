@@ -17,10 +17,10 @@ use LogicException;
 final class World
 {
     private const MIN_X = 0;
-    private const MAX_X = 7; //9 //14 // 20;
+    private const MAX_X = 7; //7 //14 // 20; // 3600000000
 
     private const MIN_Y = 0;
-    private const MAX_Y = 3; //3 // 21 // 40;
+    private const MAX_Y = 21; //3 // 21 // 40 // 1800000000;
 
     private array $data = [];
 
