@@ -49,10 +49,14 @@ class Output
         echo "\n--------------------------------------------------------------------------------";
         echo "\n" . $header;
         echo "\n--------------------------------------------------------------------------------";
+        $gdp = 0;
         foreach ($players->getData() as $player) {
             echo "\n";
             echo str_pad(sprintf('%-2s: %-4s', $player->getId(), $player->getRoundsPlayedInFreedomCompensation()), 10, " ", STR_PAD_LEFT);
+            $gdp += $player->getRoundsPlayedInFreedomCompensation();
         }
+        echo "\n--------------------------------------------------------------------------------";
+        echo sprintf("\nIn total (aka. GDP?): %s", $gdp);
         echo "\n--------------------------------------------------------------------------------\n";
     }
 
