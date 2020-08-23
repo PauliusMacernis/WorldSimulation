@@ -18,25 +18,32 @@ use Simulation\Exception\TheWorldIsFull;
 final class World
 {
     private const MIN_X = 0;
-    private const MAX_X = 7; //7 //14 // 20; // 3600000000
+    private const MAX_X = 36; //7 //14 // 20; // 3600000000 // 18 // 360
 
     private const MIN_Y = 0;
-    private const MAX_Y = 11; //3 // 21 // 40 // 1800000000;
+    private const MAX_Y = 18; //3 // 21 // 40 // 1800000000 // 30 // 180
+
+    private WorldPerformance $worldPerformance;
 
     private array $data = [];
 
     public function __construct()
     {
+        $this->worldPerformance = new WorldPerformance($this->getAmountOfPixels());
         for ($x = self::MIN_X; $x <= self::MAX_X; $x++) {
             for ($y = self::MIN_Y; $y <= self::MAX_Y; $y++) {
-                $this->setPixelOneExactPixelTo($x, $y, null, null, null);
+                $this->setPixelOneExactPixelTo($x, $y, null);
             }
         }
     }
 
-    public function setPixelOneExactPixelTo(int $x, int $y, ?Player $player, ?int $counterRound, ?int $counterTake): void
+    public function setPixelOneExactPixelTo(int $x, int $y, ?Player $player): void
     {
-        $this->data[$y][$x] = new Pixel($x, $y, $player, $counterRound, $counterTake);
+        $this->data[$y][$x] = new Pixel($x, $y, $player, $this->worldPerformance->getCounterRound(), $this->worldPerformance->getCounterTaken());
+
+        if (null !== $player) {
+            $this->worldPerformance->increasePixelsByPlayer($player);
+        }
     }
 
     /**
@@ -45,6 +52,21 @@ final class World
     public function getData(): array
     {
         return $this->data;
+    }
+
+    public function getAmountOfPixels(): int
+    {
+        return (self::MAX_X - self::MIN_X + 1) * (self::MAX_Y - self::MIN_Y + 1);
+    }
+
+    public function getAmountOfX(): int
+    {
+        return (self::MAX_X - self::MIN_X + 1);
+    }
+
+    public function getAmountOfY(): int
+    {
+        return (self::MAX_Y - self::MIN_Y + 1);
     }
 
     public function getRandomPixelX(): int
@@ -57,24 +79,25 @@ final class World
         return mt_rand(self::MIN_Y, self::MAX_Y);
     }
 
-    public function setOnePixelTo(Player $player, Statistics $statistics, int $counterRound, int $counterTake, Output $output): void
+    public function setOnePixelTo(Player $player, Output $output): void
     {
+        $this->worldPerformance->increaseCounterTakenAsReservation();
+
         try {
-            if (false === $statistics->isPlayerInWorld($player, $this, null, null)) {
-                $this->setInitialPixelOfPlayer($player, $counterRound, $counterTake);
-            } else {
-                $this->setOtherThanInitialPixelOfPlayer($player, $statistics, $counterRound, $counterTake);
+
+            if ($this->isPlayerInWorld($player)) {
+                $this->setOtherThanInitialPixelOfPlayer($player);
             }
 
             $player->increaseRoundsPlayedInFreedom();
 
         } catch (TheWorldIsFull $exception) {
-            $output->info(sprintf('%s [%s.%s]: THE WORLD IS FULL', $player->getId(), $counterRound, $counterTake));
+            $output->info(sprintf('%s [%s.%s]: THE WORLD IS FULL', $player->getId(), $this->worldPerformance->getCounterRound(), $this->worldPerformance->getCounterTaken()));
             // The World is full, we compensate to each of remaining players.
             $freedomLimitCompensation = new FreedomLimitCompensation();
             $player->increaseRoundsPlayedInFreedomCompensationBy($freedomLimitCompensation->getCompensation());
         } catch (FreedomLimit $exception) {
-            $output->info(sprintf('%s [%s.%s]: FREEDOM LIMIT', $player->getId(), $counterRound, $counterTake));
+            $output->info(sprintf('%s [%s.%s]: FREEDOM LIMIT', $player->getId(), $this->worldPerformance->getCounterRound(), $this->worldPerformance->getCounterTaken()));
             // Player gets compensation & becomes equally happy compared to the players who got the territory
             $freedomLimitCompensation = new FreedomLimitCompensation();
             $player->increaseRoundsPlayedInFreedomCompensationBy($freedomLimitCompensation->getCompensation());
@@ -83,32 +106,34 @@ final class World
         $player->increaseRoundsPlayed();
     }
 
-    private function setInitialPixelOfPlayer(Player $player, int $counterRound, int $counterTake): void
+    private function setInitialPixelOfPlayer(Player $player): void
     {
+        $this->worldPerformance->increaseCounterTakenAsReservation();
         $this->data[$player->getPixelInitial()->getY()][$player->getPixelInitial()->getX()] = new Pixel(
             $player->getPixelInitial()->getX(),
             $player->getPixelInitial()->getY(),
             $player,
-            $counterRound,
-            $counterTake
+            $this->worldPerformance->getCounterRound(),
+            $this->worldPerformance->getCounterTaken(),
         );
     }
 
-    private function setOtherThanInitialPixelOfPlayer(Player $player, Statistics $statistics, int $counterRound, int $counterTake): void
+    private function setOtherThanInitialPixelOfPlayer(Player $player): void
     {
         $pixel = null;
         $locator = new Locator();
-        $try = 0;
+        $try = $player->getLatestTry();
 
         while (null === $pixel) {
             ++$try;
+            $player->setLatestTry($try);
 
-            $pixel = $locator->locateNextPointToTakeBasedOnInitial($player, $this, $statistics, $counterRound, $counterTake, $try);
+            $pixel = $locator->locateNextPointToTakeBasedOnInitial($player, $this, $this->worldPerformance->getCounterRound(), $this->worldPerformance->getCounterTaken(), $try);
             if (null !== $pixel) {
-                $this->setPixelOneExactPixelTo($pixel->getX(), $pixel->getY(), $player, $counterRound, $counterTake);
+                $this->setPixelOneExactPixelTo($pixel->getX(), $pixel->getY(), $player);
             }
 
-            if ($this->isItFreedomLimit($pixel, $locator, $counterTake, $try, $player)) {
+            if ($this->isItFreedomLimit($pixel, $locator, $try, $player)) {
                 throw new FreedomLimit(sprintf('Limited freedom of player ID:%s', $player->getId()));
             }
         }
@@ -151,10 +176,40 @@ final class World
         return true;
     }
 
-    private function isItFreedomLimit(?Pixel $pixel, Locator $locator, int $counterTake, int $try, Player $player): bool
+    private function isItFreedomLimit(?Pixel $pixel, Locator $locator, int $try, Player $player): bool
     {
         return
             null === $pixel
             && $player->getRoundsPlayedInFreedom() + 1 <= $locator->getRoundConvertedFromTry($try);
+    }
+
+    public function initializeAllPlayers(PlayersUnique $players): void
+    {
+        foreach ($players->getData() as $player) {
+            $this->setInitialPixelOfPlayer($player);
+            $this->worldPerformance->increasePixelsByPlayer($player);
+            $player->increaseRoundsPlayed();
+            $player->increaseRoundsPlayedInFreedom();
+        }
+    }
+
+    public function startNewRound(): void
+    {
+        $this->worldPerformance->increaseCounterRound();
+    }
+
+    public function isPlayerInWorld(Player $player): bool
+    {
+        return $this->worldPerformance->isPlayerInPixels($player);
+    }
+
+    public function getWorldPerformance(): WorldPerformance
+    {
+        return $this->worldPerformance;
+    }
+
+    public function isFreeSpaceFoundIn(): bool
+    {
+        return $this->worldPerformance->getCountFreePixels() > 0;
     }
 }

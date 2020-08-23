@@ -3,8 +3,9 @@ N amount of points compete for the land. It is the war-free world therefore comp
 
 ## Run
 
-`composer install`  
-`php simulate.php`
+`docker-compose up --build -d && docker-compose exec fpm composer install`  
+`docker-compose exec fpm php simulate.php`  
+`docker-compose down`
 
 The output that works initially:  
 

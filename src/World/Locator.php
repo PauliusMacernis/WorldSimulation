@@ -13,7 +13,7 @@ final class Locator
     private const RIGHT = 1;
     private const DOWN = 2;
     private const LEFT = 3;
-    private const DIRECTIONS_COUNT_IN_TOTAL = 4; // UP(0), RIGHT(1), DOWN(2), LEFT(3) , - 4 directions in total
+    private const DIRECTIONS_COUNT = 4; // UP(0), RIGHT(1), DOWN(2), LEFT(3) , - 4 directions in total
 
     private const ROUNDS_START_FROM_NUMBER = 1; // The number value of the first round
     private const TRY_STARTS_FROM_NUMBER = 1; // The number value of the first try
@@ -25,13 +25,13 @@ final class Locator
      * Therefore...
      *
      */
-    public function locateNextPointToTakeBasedOnInitial(Player $player, World $world, Statistics $statistics, int $counterRound, int $counterTake, int $try): ?Pixel
+    public function locateNextPointToTakeBasedOnInitial(Player $player, World $world, int $counterRound, int $counterTake, int $try): ?Pixel
     {
-        if (false === $statistics->isPlayerInWorld($player, $world, null, null)) {
+        if (false === $world->isPlayerInWorld($player)) {
             throw new PixelInitialIsMissing(sprintf('The World is missing initial pixel (aka. home) of the player ID: %s', $player->getId()));
         }
 
-        if (false === $statistics->isFreeSpaceFoundIn($world)) {
+        if (false === $world->isFreeSpaceFoundIn()) {
             throw new TheWorldIsFull('The World is full. it is useless to go for locating another free spot.');
         }
 
@@ -77,11 +77,11 @@ final class Locator
 
     public function getRoundConvertedFromTry(int $try): int
     {
-        return (int)floor($try / self::DIRECTIONS_COUNT_IN_TOTAL) + self::ROUNDS_START_FROM_NUMBER;
+        return (int)floor($try / self::DIRECTIONS_COUNT) + self::ROUNDS_START_FROM_NUMBER;
     }
 
     private function getDirectionConvertedFromTry(int $try): int
     {
-        return ($try - self::TRY_STARTS_FROM_NUMBER) % self::DIRECTIONS_COUNT_IN_TOTAL;
+        return ($try - self::TRY_STARTS_FROM_NUMBER) % self::DIRECTIONS_COUNT;
     }
 }

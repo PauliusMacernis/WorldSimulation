@@ -13,6 +13,7 @@ class Player
     /** @var string|null Null in case Player is not set. String otherwise. */
     private ?string $id;
     private PixelInitial $pixelInitial;
+    private int $latestTry;
     private int $roundsPlayed;
     private int $roundsPlayedInFreedom;
     private int $roundsPlayedInFreedomCompensation;
@@ -21,6 +22,7 @@ class Player
     {
         $this->id = $id;
         $this->pixelInitial = $pixelInitial;
+        $this->latestTry = 0;
         $this->roundsPlayed = 0;
         $this->roundsPlayedInFreedom = 0;
         $this->roundsPlayedInFreedomCompensation = 0;
@@ -34,6 +36,21 @@ class Player
     public function getPixelInitial(): PixelInitial
     {
         return $this->pixelInitial;
+    }
+
+    public function getLatestTry(): int
+    {
+        return $this->latestTry;
+    }
+
+    public function setLatestTry(int $latestTry): void
+    {
+        $this->latestTry = $latestTry;
+    }
+
+    public function getRoundsPlayed(): int
+    {
+        return $this->roundsPlayed;
     }
 
     public function increaseRoundsPlayed(): void

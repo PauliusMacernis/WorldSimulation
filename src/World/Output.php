@@ -56,7 +56,7 @@ class Output
             $gdp += $player->getRoundsPlayedInFreedomCompensation();
         }
         echo "\n--------------------------------------------------------------------------------";
-        echo sprintf("\nIn total (aka. GDP?): %s", $gdp);
+        echo sprintf("\nIn total: %s", $gdp);
         echo "\n--------------------------------------------------------------------------------\n";
     }
 
@@ -65,5 +65,22 @@ class Output
         echo "\n";
         echo "\n--------------------------------------------------------------------------------";
         echo "\n" . $text;
+    }
+
+    public function performance(float $timeStart, World $world, string $message): void
+    {
+        $amountOfPixels = $world->getAmountOfPixels();
+
+        echo "\n\n--------------------------------------------------------------------------------";
+        echo "\nThe world of " . $amountOfPixels . " pixels. [X:" . $world->getAmountOfX() . "][Y:" . $world->getAmountOfY() . "]";
+        echo "\n" . $message;
+        echo "\n--------------------------------------------------------------------------------";
+        echo "\nMemory peak usage: " . round(memory_get_peak_usage() / 1024 / 1024, 2) . ' MB';
+        echo "\nDuration: " . round(microtime(true) - $timeStart, 2) . ' sec.';
+        echo "\n--------------------------------------------------------------------------------";
+        echo "\nMemory peak usage per px: " . round(memory_get_peak_usage() / $amountOfPixels,) . ' B';
+        echo "\nDuration per px: " . round((microtime(true) - $timeStart) / $amountOfPixels, 4) . ' sec.';
+        echo "\n--------------------------------------------------------------------------------\n";
+        //var_dump($world->getWorldPerformance());
     }
 }
