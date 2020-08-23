@@ -11,7 +11,7 @@ use Simulation\World\World;
 
 $timeStart = microtime(true);
 
-$output = new Output();
+$output = new Output(['info' => 0]);
 $players = new PlayersUnique(
     new Player('A', new PixelInitial(1, 5)),
 
@@ -34,7 +34,7 @@ $world = new World();
 
 $world->startNewRound();
 $world->initializeAllPlayers($players);
-$output->outputWorld($world, 'Initial');
+//$output->outputWorld($world, 'Initial');
 
 while ($world->isFreeSpaceFoundIn()) {
     $world->startNewRound();
@@ -54,5 +54,5 @@ while ($world->isFreeSpaceFoundIn()) {
 }
 
 $output->performance($timeStart, $world, 'Performance summary at the end.');
-$output->outputWorld($world, 'The Complete World:');
-$output->outputPlayersCompensations($players, 'Player : Compensation');
+//$output->outputWorld($world, 'The Complete World:');
+//$output->outputPlayersCompensations($players, 'Player : Compensation');

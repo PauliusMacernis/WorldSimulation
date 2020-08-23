@@ -10,6 +10,14 @@ class Output
 {
     private const FREE_TERRITORY_TITLE = '.';
 
+    /** @var array Array containing keys for a stream name (e.g. "info") and 1 or 0 to say it is off or on. All values are on by default. */
+    private array $streamsOnOff;
+
+    public function __construct($streamsOnOff)
+    {
+        $this->streamsOnOff = $streamsOnOff;
+    }
+
     public function outputWorld(World $world, string $header): void
     {
         echo "\n--------------------------------------------------------------------------------";
@@ -62,6 +70,9 @@ class Output
 
     public function info(string $text): void
     {
+        if(false === $this->isStreamOn()) {
+            return;
+        }
         echo "\n";
         echo "\n--------------------------------------------------------------------------------";
         echo "\n" . $text;
@@ -82,5 +93,13 @@ class Output
         echo "\nDuration per px: " . round((microtime(true) - $timeStart) / $amountOfPixels, 4) . ' sec.';
         echo "\n--------------------------------------------------------------------------------\n";
         //var_dump($world->getWorldPerformance());
+    }
+
+    /**
+     * @return bool
+     */
+    private function isStreamOn(): bool
+    {
+        return !(isset($this->streamsOnOff['info']) && $this->streamsOnOff['info'] === 0);
     }
 }
