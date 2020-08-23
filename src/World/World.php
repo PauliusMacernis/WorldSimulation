@@ -18,10 +18,10 @@ use Simulation\Exception\TheWorldIsFull;
 final class World
 {
     private const MIN_X = 0;
-    private const MAX_X = 36; //7 //14 // 20; // 3600000000 // 18 // 360
+    private const MAX_X = 360; //7 //14 // 20; // 3600000000 // 18 // 360
 
     private const MIN_Y = 0;
-    private const MAX_Y = 18; //3 // 21 // 40 // 1800000000 // 30 // 180
+    private const MAX_Y = 180; //3 // 21 // 40 // 1800000000 // 30 // 180
 
     private WorldPerformance $worldPerformance;
 
@@ -42,7 +42,7 @@ final class World
         $this->data[$y][$x] = new Pixel($x, $y, $player, $this->worldPerformance->getCounterRound(), $this->worldPerformance->getCounterTaken());
 
         if (null !== $player) {
-            $this->worldPerformance->increasePixelsByPlayer($player);
+            $this->worldPerformance->increasePixelsByPlayer($player, $this->data[$y][$x]);
         }
     }
 
@@ -106,16 +106,10 @@ final class World
         $player->increaseRoundsPlayed();
     }
 
-    private function setInitialPixelOfPlayer(Player $player): void
+    private function setInitialPixelOfPlayer(Player $player, Pixel $pixel): void
     {
         $this->worldPerformance->increaseCounterTakenAsReservation();
-        $this->data[$player->getPixelInitial()->getY()][$player->getPixelInitial()->getX()] = new Pixel(
-            $player->getPixelInitial()->getX(),
-            $player->getPixelInitial()->getY(),
-            $player,
-            $this->worldPerformance->getCounterRound(),
-            $this->worldPerformance->getCounterTaken(),
-        );
+        $this->data[$player->getPixelInitial()->getY()][$player->getPixelInitial()->getX()] = $pixel;
     }
 
     private function setOtherThanInitialPixelOfPlayer(Player $player): void
@@ -139,24 +133,13 @@ final class World
         }
     }
 
-    public function getPixelByPlayer(Player $player, ?int $specificRound, ?int $specificTake): ?Pixel
+    public function getPixelByPlayer(Player $player, int $specificRound, ?int $specificTake): ?Pixel
     {
-        foreach ($this->data as $row) {
-            foreach ($row as $pixelData) {
-                if (null === $pixelData->getPlayer()) {
-                    continue;
-                }
-                if (
-                    ($specificRound === null || $specificRound === $pixelData->getCountRound())
-                    && ($specificTake === null || $specificTake === $pixelData->getCountTake())
-                    && $pixelData->getPlayer()->getId() === $player->getId()
-                ) {
-                    return $pixelData;
-                }
-            }
+        if (false === $this->isPlayerStillPlayingRounds($player, $specificRound)) {
+            return null; // No reason to look for pixel as the player already
         }
 
-        return null;
+        return $this->worldPerformance->getLastPixelTakenByEachPlayer($player);
     }
 
     public function getPixelByXY(int $x, int $y): Pixel
@@ -186,8 +169,15 @@ final class World
     public function initializeAllPlayers(PlayersUnique $players): void
     {
         foreach ($players->getData() as $player) {
-            $this->setInitialPixelOfPlayer($player);
-            $this->worldPerformance->increasePixelsByPlayer($player);
+            $pixel = new Pixel(
+                $player->getPixelInitial()->getX(),
+                $player->getPixelInitial()->getY(),
+                $player,
+                $this->worldPerformance->getCounterRound(),
+                $this->worldPerformance->getCounterTaken(),
+            );
+            $this->setInitialPixelOfPlayer($player, $pixel);
+            $this->worldPerformance->increasePixelsByPlayer($player, $pixel);
             $player->increaseRoundsPlayed();
             $player->increaseRoundsPlayedInFreedom();
         }
@@ -211,5 +201,13 @@ final class World
     public function isFreeSpaceFoundIn(): bool
     {
         return $this->worldPerformance->getCountFreePixels() > 0;
+    }
+
+    private function isPlayerStillPlayingRounds(Player $player, int $specificRound): bool
+    {
+        return
+            $this->worldPerformance->getLastPixelTakenByEachPlayer($player)->getCountRound() === $specificRound // This is the current round the user already played at
+            || $this->worldPerformance->getLastPixelTakenByEachPlayer($player)->getCountRound() + 1 === $specificRound // This is the new round the user have to play in
+        ;
     }
 }

@@ -54,5 +54,5 @@ while ($world->isFreeSpaceFoundIn()) {
 }
 
 $output->performance($timeStart, $world, 'Performance summary at the end.');
-//$output->outputWorld($world, 'The Complete World:');
-//$output->outputPlayersCompensations($players, 'Player : Compensation');
+$output->outputWorld($world, 'The Complete World:');
+$output->outputPlayersCompensations($players, 'Player : Compensation');

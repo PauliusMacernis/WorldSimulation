@@ -92,7 +92,7 @@ class Output
         echo "\nMemory peak usage per px: " . round(memory_get_peak_usage() / $amountOfPixels,) . ' B';
         echo "\nDuration per px: " . round((microtime(true) - $timeStart) / $amountOfPixels, 4) . ' sec.';
         echo "\n--------------------------------------------------------------------------------\n";
-        //var_dump($world->getWorldPerformance());
+        var_dump($world->getWorldPerformance());
     }
 
     /**
